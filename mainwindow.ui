@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QPlainTextEdit" name="plainTextEdit">
+   <widget class="SXOQPlainText" name="plainTextEdit">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -22,6 +22,12 @@
       <width>1181</width>
       <height>581</height>
      </rect>
+    </property>
+    <property name="overwriteMode">
+     <bool>false</bool>
+    </property>
+    <property name="centerOnScroll">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -134,11 +140,24 @@
       <x>690</x>
       <y>50</y>
       <width>51</width>
-      <height>34</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>Next NN</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btAutoFix">
+    <property name="geometry">
+     <rect>
+      <x>750</x>
+      <y>50</y>
+      <width>88</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Autofix</string>
     </property>
    </widget>
   </widget>
@@ -187,6 +206,13 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>SXOQPlainText</class>
+   <extends>QPlainTextEdit</extends>
+   <header>sxoqplaintext.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

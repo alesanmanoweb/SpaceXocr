@@ -33,8 +33,6 @@ void MainWindow::on_actionOpen_triggered()
 
 	QTextStream ReadFile(&file);
 	ui->plainTextEdit->setPlainText(ReadFile.readAll());
-	totLines = ui->plainTextEdit->blockCount();
-	ui->labelTotFrames->setText(QString("/ %1").arg(totLines));
 	file.close();
 }
 
@@ -86,7 +84,6 @@ void MainWindow::on_btPrev_clicked()
 void MainWindow::on_btDelNext_clicked()
 {
 	ui->plainTextEdit->textCursor().removeSelectedText();
-	totLines--;
 	on_btNext_clicked();
 }
 
@@ -95,13 +92,14 @@ void MainWindow::on_btDelLine_clicked()
 	QTextCursor cursor = ui->plainTextEdit->textCursor();
 	cursor.select(QTextCursor::BlockUnderCursor);
 	cursor.removeSelectedText();
+	ui->plainTextEdit->moveCursor(QTextCursor::Down);
 	ui->plainTextEdit->setFocus();
 }
 
 void MainWindow::on_textLineN_returnPressed()
 {
 	int line = ui->textLineN->text().toInt();
-	if(line > 0 && line < totLines)
+	if(line > 0 && line < ui->plainTextEdit->blockCount())
 	{
 		QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(line-1));
 		ui->plainTextEdit->setTextCursor(cursor);
@@ -116,7 +114,7 @@ void MainWindow::on_btNextNN_clicked()
 	double oldA = -1;
 	double oldB = -1;
 	double a, b;
-	for(int i = ui->plainTextEdit->textCursor().blockNumber(); i < totLines; i++)
+	for(int i = ui->plainTextEdit->textCursor().blockNumber(); i < ui->plainTextEdit->blockCount(); i++)
 	{
 		QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
 		QStringList list = line.split(QChar(' '), QString::SkipEmptyParts);
@@ -142,3 +140,16 @@ void MainWindow::on_btNextNN_clicked()
 	}
 }
 
+void MainWindow::on_btAutoFix_clicked()
+{
+	for(int i = 0; i < ui->plainTextEdit->textCursor().blockNumber(); i++)
+	{
+		QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
+		QStringList list = line.split(" ", QString::SkipEmptyParts);
+	}
+}
+
+void MainWindow::on_plainTextEdit_blockCountChanged(int newBlockCount)
+{
+	ui->labelTotFrames->setText(QString("/ %1").arg(newBlockCount));
+}

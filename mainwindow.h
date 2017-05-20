@@ -36,6 +36,10 @@ private slots:
 
 	void on_btNextNN_clicked();
 
+	void on_btAutoFix_clicked();
+
+	void on_plainTextEdit_blockCountChanged(int newBlockCount);
+
 private:
 	Ui::MainWindow *ui;
 	QString directory;

@@ -13,8 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    sxoqplaintext.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    sxoqplaintext.h
 
 FORMS    += mainwindow.ui
