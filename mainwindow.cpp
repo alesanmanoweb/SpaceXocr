@@ -69,33 +69,6 @@ void MainWindow::on_actionSave_triggered()
 		QMessageBox::critical(this, tr("Error"), tr("Error during save"));
 }
 
-void MainWindow::on_btNext_clicked()
-{
-	ui->plainTextEdit->find("_");
-	ui->plainTextEdit->setFocus();
-}
-
-void MainWindow::on_btPrev_clicked()
-{
-	ui->plainTextEdit->find("_", QTextDocument::FindBackward);
-	ui->plainTextEdit->setFocus();
-}
-
-void MainWindow::on_btDelNext_clicked()
-{
-	ui->plainTextEdit->textCursor().removeSelectedText();
-	on_btNext_clicked();
-}
-
-void MainWindow::on_btDelLine_clicked()
-{
-	QTextCursor cursor = ui->plainTextEdit->textCursor();
-	cursor.select(QTextCursor::BlockUnderCursor);
-	cursor.removeSelectedText();
-	ui->plainTextEdit->moveCursor(QTextCursor::Down);
-	ui->plainTextEdit->setFocus();
-}
-
 void MainWindow::on_textLineN_returnPressed()
 {
 	int line = ui->textLineN->text().toInt();
@@ -109,7 +82,40 @@ void MainWindow::on_textLineN_returnPressed()
 		ui->textLineN->setText(QString::number(currentLine));
 }
 
-void MainWindow::on_btNextNN_clicked()
+void MainWindow::on_plainTextEdit_blockCountChanged(int newBlockCount)
+{
+	ui->labelTotFrames->setText(QString("/ %1").arg(newBlockCount));
+}
+
+void MainWindow::on_actionPrev_triggered()
+{
+	ui->plainTextEdit->find("_", QTextDocument::FindBackward);
+	ui->plainTextEdit->setFocus();
+
+}
+
+void MainWindow::on_actionNext_triggered()
+{
+	ui->plainTextEdit->find("_");
+	ui->plainTextEdit->setFocus();
+}
+
+void MainWindow::on_actionDel_Next_triggered()
+{
+	ui->plainTextEdit->textCursor().removeSelectedText();
+	on_actionNext_triggered();
+}
+
+void MainWindow::on_actionDel_Line_triggered()
+{
+	QTextCursor cursor = ui->plainTextEdit->textCursor();
+	cursor.select(QTextCursor::BlockUnderCursor);
+	cursor.removeSelectedText();
+	ui->plainTextEdit->moveCursor(QTextCursor::Down);
+	ui->plainTextEdit->setFocus();
+}
+
+void MainWindow::on_actionNext_NN_triggered()
 {
 	double oldA = -1;
 	double oldB = -1;
@@ -140,16 +146,11 @@ void MainWindow::on_btNextNN_clicked()
 	}
 }
 
-void MainWindow::on_btAutoFix_clicked()
+void MainWindow::on_actionAutofix_triggered()
 {
 	for(int i = 0; i < ui->plainTextEdit->textCursor().blockNumber(); i++)
 	{
 		QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
 		QStringList list = line.split(" ", QString::SkipEmptyParts);
 	}
-}
-
-void MainWindow::on_plainTextEdit_blockCountChanged(int newBlockCount)
-{
-	ui->labelTotFrames->setText(QString("/ %1").arg(newBlockCount));
 }

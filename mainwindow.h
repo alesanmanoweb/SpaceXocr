@@ -24,28 +24,28 @@ private slots:
 
 	void on_actionSave_triggered();
 
-	void on_btNext_clicked();
-
-	void on_btPrev_clicked();
-
-	void on_btDelNext_clicked();
-
-	void on_btDelLine_clicked();
-
 	void on_textLineN_returnPressed();
 
-	void on_btNextNN_clicked();
-
-	void on_btAutoFix_clicked();
-
 	void on_plainTextEdit_blockCountChanged(int newBlockCount);
+
+	void on_actionPrev_triggered();
+
+	void on_actionNext_triggered();
+
+	void on_actionDel_Next_triggered();
+
+	void on_actionDel_Line_triggered();
+
+	void on_actionNext_NN_triggered();
+
+	void on_actionAutofix_triggered();
 
 private:
 	Ui::MainWindow *ui;
 	QString directory;
 	QString fileName;
 	int currentLine = -1;
-	int totLines = -1;
+	int unsaved = -1;
 };
 
 #endif // MAINWINDOW_H
