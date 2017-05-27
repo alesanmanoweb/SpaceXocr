@@ -8,6 +8,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	setWindowTitle(QString("New file[*] - SpaceX OCR"));
 }
 
 MainWindow::~MainWindow()
@@ -17,7 +18,58 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_actionQuit_triggered()
 {
-	QApplication::quit();
+	close();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+	if(checkAndSave())
+	{
+		// write settings
+		event->accept();
+	}
+	else
+		event->ignore();
+}
+
+bool MainWindow::checkAndSave()
+{
+	if(!ui->plainTextEdit->document()->isModified())
+		return true;
+	const QMessageBox::StandardButton ret = QMessageBox::warning(this, tr("Application"), tr("The document has been modified.\nDo you want to save your changes?"), QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+	switch(ret)
+	{
+		case QMessageBox::Save:
+			return save();
+		case QMessageBox::Cancel:
+			return false;
+		default:
+			break;
+	}
+	return true;
+}
+
+bool MainWindow::save()
+{
+	if(fileName.isNull())
+	{
+		fileName = QFileDialog::getSaveFileName(this, tr("Save File"));
+		if(fileName.isNull())
+			return false;
+	}
+	QFile file(fileName);
+	if(file.open(QIODevice::WriteOnly | QFile::Text))
+	{
+		QTextStream stream(&file);
+		stream << ui->plainTextEdit->toPlainText();
+		file.flush();
+		file.close();
+		setWindowModified(false);
+		ui->plainTextEdit->document()->setModified(false);
+		return true;
+	}
+	QMessageBox::critical(this, tr("Error"), tr("Error during save"));
+	return false;
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -34,6 +86,7 @@ void MainWindow::on_actionOpen_triggered()
 	QTextStream ReadFile(&file);
 	ui->plainTextEdit->setPlainText(ReadFile.readAll());
 	file.close();
+	setWindowTitle(QString("%1[*] - SpaceX OCR").arg(fileName));
 }
 
 void MainWindow::on_plainTextEdit_cursorPositionChanged()
@@ -57,16 +110,7 @@ void MainWindow::on_plainTextEdit_cursorPositionChanged()
 
 void MainWindow::on_actionSave_triggered()
 {
-	QFile file(fileName);
-	if(file.open(QIODevice::WriteOnly))
-	{
-		QTextStream stream(&file);
-		stream << ui->plainTextEdit->toPlainText();
-		file.flush();
-		file.close();
-	}
-	else
-		QMessageBox::critical(this, tr("Error"), tr("Error during save"));
+	save();
 }
 
 void MainWindow::on_textLineN_returnPressed()
@@ -153,4 +197,9 @@ void MainWindow::on_actionAutofix_triggered()
 		QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
 		QStringList list = line.split(" ", QString::SkipEmptyParts);
 	}
+}
+
+void MainWindow::on_plainTextEdit_modificationChanged(bool changed)
+{
+	setWindowModified(changed);
 }
