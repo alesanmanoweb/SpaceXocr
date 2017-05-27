@@ -1,6 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#define ORG_NAME "manoweb"
+#define APP_NAME "spacexocr"
+
 #include <QMainWindow>
 
 namespace Ui {
@@ -36,6 +39,8 @@ private slots:
 private:
 	bool checkAndSave();
 	bool save();
+	void readSettings();
+	void writeSettings();
 	Ui::MainWindow *ui;
 	QString directory;
 	QString fileName;

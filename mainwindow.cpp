@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 	setWindowTitle(QString("New file[*] - SpaceX OCR"));
+	readSettings();
 }
 
 MainWindow::~MainWindow()
@@ -25,7 +26,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
 	if(checkAndSave())
 	{
-		// write settings
+		writeSettings();
 		event->accept();
 	}
 	else
@@ -72,21 +73,37 @@ bool MainWindow::save()
 	return false;
 }
 
+void MainWindow::readSettings()
+{
+	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+	directory = settings.value("directory").toString();
+}
+
+void MainWindow::writeSettings()
+{
+	QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+	if(!directory.isNull())
+		settings.setValue("directory", directory);
+}
+
 void MainWindow::on_actionOpen_triggered()
 {
-	QString openFileName = QFileDialog::getOpenFileName(this, tr("Open File"), "/root/spacex/SES10/img/proc");
-	if(openFileName.isNull())
-		return;
-	QFileInfo fileInfo(openFileName);
-	fileName = fileInfo.absoluteFilePath();
-	directory = fileInfo.absolutePath();
-	QFile file(openFileName);
-	file.open(QFile::ReadOnly | QFile::Text);
+	if(checkAndSave())
+	{
+		QString openFileName = QFileDialog::getOpenFileName(this, tr("Open File"), directory);
+		if(openFileName.isNull())
+			return;
+		QFileInfo fileInfo(openFileName);
+		fileName = fileInfo.absoluteFilePath();
+		directory = fileInfo.absolutePath();
+		QFile file(openFileName);
+		file.open(QFile::ReadOnly | QFile::Text);
 
-	QTextStream ReadFile(&file);
-	ui->plainTextEdit->setPlainText(ReadFile.readAll());
-	file.close();
-	setWindowTitle(QString("%1[*] - SpaceX OCR").arg(fileName));
+		QTextStream ReadFile(&file);
+		ui->plainTextEdit->setPlainText(ReadFile.readAll());
+		file.close();
+		setWindowTitle(QString("%1[*] - SpaceX OCR").arg(fileName));
+	}
 }
 
 void MainWindow::on_plainTextEdit_cursorPositionChanged()
