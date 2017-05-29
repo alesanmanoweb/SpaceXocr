@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include <QtWidgets>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -10,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	setWindowTitle(QString("New file[*] - SpaceX OCR"));
 	readSettings();
+	ui->statusBar->showMessage("Ready");
 }
 
 MainWindow::~MainWindow()
@@ -103,7 +105,13 @@ void MainWindow::on_actionOpen_triggered()
 		ui->plainTextEdit->setPlainText(ReadFile.readAll());
 		file.close();
 		setWindowTitle(QString("%1[*] - SpaceX OCR").arg(fileName));
+		ui->statusBar->showMessage("File opened");
 	}
+}
+
+void MainWindow::on_plainTextEdit_modificationChanged(bool changed)
+{
+	setWindowModified(changed);
 }
 
 void MainWindow::on_plainTextEdit_cursorPositionChanged()
@@ -127,7 +135,10 @@ void MainWindow::on_plainTextEdit_cursorPositionChanged()
 
 void MainWindow::on_actionSave_triggered()
 {
-	save();
+	if(save())
+		ui->statusBar->showMessage("File saved");
+	else
+		ui->statusBar->showMessage("File not saved");
 }
 
 void MainWindow::on_textLineN_returnPressed()
@@ -135,30 +146,42 @@ void MainWindow::on_textLineN_returnPressed()
 	int line = ui->textLineN->text().toInt();
 	if(line > 0 && line < ui->plainTextEdit->blockCount())
 	{
-		QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(line-1));
+		QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(line - 1));
 		ui->plainTextEdit->setTextCursor(cursor);
 		ui->plainTextEdit->setFocus();
+		ui->statusBar->showMessage("Ready");
 	}
 	else
+	{
 		ui->textLineN->setText(QString::number(currentLine));
+		ui->statusBar->showMessage("Requested line does not exist");
+	}
 }
 
 void MainWindow::on_plainTextEdit_blockCountChanged(int newBlockCount)
 {
 	ui->labelTotFrames->setText(QString("/ %1").arg(newBlockCount));
+	//ui->statusBar->showMessage("Ready");
 }
 
 void MainWindow::on_actionPrev_triggered()
 {
-	ui->plainTextEdit->find("_", QTextDocument::FindBackward);
+	bool res = ui->plainTextEdit->find("_", QTextDocument::FindBackward);
 	ui->plainTextEdit->setFocus();
-
+	if(!res)
+		ui->statusBar->showMessage("Previous _ instance not found");
+	else
+		ui->statusBar->showMessage("Ready");
 }
 
 void MainWindow::on_actionNext_triggered()
 {
-	ui->plainTextEdit->find("_");
+	bool res = ui->plainTextEdit->find("_");
 	ui->plainTextEdit->setFocus();
+	if(!res)
+		ui->statusBar->showMessage("Next _ instance not found");
+	else
+		ui->statusBar->showMessage("Ready");
 }
 
 void MainWindow::on_actionDel_Next_triggered()
@@ -174,6 +197,7 @@ void MainWindow::on_actionDel_Line_triggered()
 	cursor.removeSelectedText();
 	ui->plainTextEdit->moveCursor(QTextCursor::Down);
 	ui->plainTextEdit->setFocus();
+	ui->statusBar->showMessage("Ready");
 }
 
 void MainWindow::on_actionNext_NN_triggered()
@@ -209,14 +233,32 @@ void MainWindow::on_actionNext_NN_triggered()
 
 void MainWindow::on_actionAutofix_triggered()
 {
-	for(int i = 0; i < ui->plainTextEdit->textCursor().blockNumber(); i++)
+	int count = 0;
+	QRegularExpression re("^(\?! *\\d+ +\\d+(\?:\\.\\d+)?$).*");
+	for(int i = 0; i < ui->plainTextEdit->blockCount(); i++)
 	{
 		QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
-		QStringList list = line.split(" ", QString::SkipEmptyParts);
+		QRegularExpressionMatch match = re.match(line);
+		if(match.hasMatch())
+		{
+			qDebug() << "line: " << line;
+			QStringList list = line.split(QChar(' '), QString::SkipEmptyParts);
+			if(list.count() == 3)
+			{
+				count++;
+				QString newLine = QString("%1 %2.%3").arg(list.at(0)).arg(list.at(1)).arg(list.at(2));
+				qDebug() << "newLine:" << newLine;
+				QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(i));
+				cursor.select(QTextCursor::LineUnderCursor);
+				cursor.insertText(newLine);
+				ui->plainTextEdit->setTextCursor(cursor);
+				ui->plainTextEdit->setFocus();
+				ui->statusBar->showMessage("Ready");
+			}
+		}
 	}
-}
-
-void MainWindow::on_plainTextEdit_modificationChanged(bool changed)
-{
-	setWindowModified(changed);
+	if(count > 0)
+		ui->statusBar->showMessage(QString("%1 matches auto-fixed").arg(count));
+	else
+		ui->statusBar->showMessage("No match found");
 }
