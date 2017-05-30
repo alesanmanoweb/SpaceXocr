@@ -28,6 +28,7 @@ int SXOQPlainText::lineNumberAreaWidth()
 		max /= 10;
 		++digits;
 	}
+	digits += 9;
 
 	int space = 3 + fontMetrics().width(QLatin1Char('9')) * digits;
 
@@ -84,13 +85,14 @@ void SXOQPlainText::lineNumberAreaPaintEvent(QPaintEvent *event)
 	painter.fillRect(event->rect(), Qt::lightGray);
 	QTextBlock block = firstVisibleBlock();
 	int blockNumber = block.blockNumber();
+	double time = blockNumber * (1 / 29.97);
 	int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
 	int bottom = top + (int) blockBoundingRect(block).height();
 	while (block.isValid() && top <= event->rect().bottom())
 	{
 		if (block.isVisible() && bottom >= event->rect().top())
 		{
-			QString number = QString::number(blockNumber + 1);
+			QString number = QString::number(blockNumber + 1) + " - " + QString::number(time, 'f', 2);
 			painter.setPen(Qt::black);
 			painter.drawText(0, top, lineNumberArea->width(), fontMetrics().height(),
 			Qt::AlignRight, number);

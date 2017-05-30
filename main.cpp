@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	QCoreApplication::setOrganizationName("Manoweb");
 	QCoreApplication::setApplicationName("SpaceXocr");
-	QCoreApplication::setApplicationVersion("0.0.2");
+	QCoreApplication::setApplicationVersion("0.0.3");
 	MainWindow w;
 	w.show();
 

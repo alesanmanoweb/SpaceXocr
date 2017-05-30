@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>836</width>
+    <width>792</width>
     <height>754</height>
    </rect>
   </property>
@@ -148,7 +148,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>836</width>
+     <width>792</width>
      <height>30</height>
     </rect>
    </property>
@@ -173,8 +173,16 @@
     <addaction name="actionNext_NN"/>
     <addaction name="actionAutofix"/>
    </widget>
+   <widget class="QMenu" name="menuChart">
+    <property name="title">
+     <string>&amp;Chart</string>
+    </property>
+    <addaction name="actionShow"/>
+    <addaction name="actionRefresh"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuProcess"/>
+   <addaction name="menuChart"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -189,6 +197,7 @@
    <addaction name="actionDel_Line"/>
    <addaction name="actionNext_NN"/>
    <addaction name="actionAutofix"/>
+   <addaction name="actionRefresh"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen">
@@ -239,6 +248,16 @@
   <action name="actionAutofix">
    <property name="text">
     <string>&amp;Autofix</string>
+   </property>
+  </action>
+  <action name="actionShow">
+   <property name="text">
+    <string>&amp;Show</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string>Refresh</string>
    </property>
   </action>
  </widget>

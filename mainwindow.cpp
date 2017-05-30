@@ -12,6 +12,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	setWindowTitle(QString("New file[*] - SpaceX OCR"));
 	readSettings();
 	ui->statusBar->showMessage("Ready");
+	loading = false;
+	connect(&seriesA, SIGNAL(clicked(QPointF)), this, SLOT(clickedPoint(QPointF)));
+	connect(&seriesB, SIGNAL(clicked(QPointF)), this, SLOT(clickedPoint(QPointF)));
 }
 
 MainWindow::~MainWindow()
@@ -30,6 +33,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 	{
 		writeSettings();
 		event->accept();
+		QApplication::quit();
 	}
 	else
 		event->ignore();
@@ -102,7 +106,9 @@ void MainWindow::on_actionOpen_triggered()
 		file.open(QFile::ReadOnly | QFile::Text);
 
 		QTextStream ReadFile(&file);
+		loading = true;
 		ui->plainTextEdit->setPlainText(ReadFile.readAll());
+		loading = false;
 		file.close();
 		setWindowTitle(QString("%1[*] - SpaceX OCR").arg(fileName));
 		ui->statusBar->showMessage("File opened");
@@ -192,12 +198,17 @@ void MainWindow::on_actionDel_Next_triggered()
 
 void MainWindow::on_actionDel_Line_triggered()
 {
+	loading = true;
 	QTextCursor cursor = ui->plainTextEdit->textCursor();
 	cursor.select(QTextCursor::BlockUnderCursor);
 	cursor.removeSelectedText();
 	ui->plainTextEdit->moveCursor(QTextCursor::Down);
 	ui->plainTextEdit->setFocus();
+	qDebug() << "startMod";
+	populateSeries();
+	qDebug() << "stopMod";
 	ui->statusBar->showMessage("Ready");
+	loading = false;
 }
 
 void MainWindow::on_actionNext_NN_triggered()
@@ -218,7 +229,6 @@ void MainWindow::on_actionNext_NN_triggered()
 		}
 		a = list.at(0).toDouble();
 		b = list.at(1).toDouble();
-		qDebug() << a << b;
 		if(a < oldA || b < oldB)
 		{
 			QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(i));
@@ -241,13 +251,11 @@ void MainWindow::on_actionAutofix_triggered()
 		QRegularExpressionMatch match = re.match(line);
 		if(match.hasMatch())
 		{
-			qDebug() << "line: " << line;
 			QStringList list = line.split(QChar(' '), QString::SkipEmptyParts);
 			if(list.count() == 3)
 			{
 				count++;
-				QString newLine = QString("%1 %2.%3").arg(list.at(0)).arg(list.at(1)).arg(list.at(2));
-				qDebug() << "newLine:" << newLine;
+				QString newLine = QString("%1    %2.%3").arg(list.at(0)).arg(list.at(1)).arg(list.at(2));
 				QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(i));
 				cursor.select(QTextCursor::LineUnderCursor);
 				cursor.insertText(newLine);
@@ -261,4 +269,115 @@ void MainWindow::on_actionAutofix_triggered()
 		ui->statusBar->showMessage(QString("%1 matches auto-fixed").arg(count));
 	else
 		ui->statusBar->showMessage("No match found");
+}
+
+void MainWindow::on_actionExport_triggered()
+{
+	QString exportFileName = QFileDialog::getSaveFileName(this, tr("Export to..."));
+	if(exportFileName.isNull())
+		return;
+	QFile file(exportFileName);
+	if(file.open(QIODevice::WriteOnly | QFile::Text))
+	{
+		QTextStream stream(&file);
+		double a, b;
+		double time = 0;
+		const double timegap = 1 / 29.97;
+		for(int i = 0; i < ui->plainTextEdit->blockCount(); i++)
+		{
+			QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
+			QStringList list = line.split(QChar(' '), QString::SkipEmptyParts);
+			if(list.count() != 2)
+			{
+				// Message window
+				break;
+				QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(i));
+				ui->plainTextEdit->setTextCursor(cursor);
+				ui->plainTextEdit->setFocus();
+			}
+			a = list.at(0).toDouble();
+			b = list.at(1).toDouble();
+			stream << time << ',' << a << ',' << b << '\n';
+			time += timegap;
+		}
+		file.flush();
+		file.close();
+		return;
+	}
+	QMessageBox::critical(this, tr("Error"), tr("Error during export"));
+}
+
+void MainWindow::populateSeries()
+{
+	seriesA.clear();
+	seriesB.clear();
+	double a, b;
+	double time = 0;
+	const double timegap = 1 / 29.97;
+	for(int i = 0; i < ui->plainTextEdit->blockCount(); i++)
+	{
+		QString line = ui->plainTextEdit->document()->findBlockByLineNumber(i).text();
+		QStringList list = line.split(QChar(' '), QString::SkipEmptyParts);
+		if(list.count() != 2) // non-nominal line; we set value to 0 so it's easy to spot it on the chart
+		{
+			a = 0;
+			b = 0;
+		}
+		else
+		{
+			a = list.at(0).toDouble();
+			b = list.at(1).toDouble();
+		}
+		seriesA.append(time, a);
+		seriesB.append(time, b);
+		time += timegap;
+	}
+}
+
+void MainWindow::on_actionShow_triggered()
+{
+	populateSeries();
+	cd = new ChartDialog();
+	cd->show();
+	cd->showChart(&seriesA, &seriesB);
+}
+
+void MainWindow::on_actionRefresh_triggered()
+{
+	qDebug() << "startMod";
+	populateSeries();
+	qDebug() << "stopMod";
+}
+
+void MainWindow::on_plainTextEdit_textChanged()
+{
+	int index = currentLine - 1;
+	if(loading)
+		return;
+	double a, b;
+	double time;
+	QString line = ui->plainTextEdit->document()->findBlockByLineNumber(index).text();
+	QStringList list = line.split(QChar(' '), QString::SkipEmptyParts);
+	if(list.count() != 2) // non-nominal line; we set value to 0 so it's easy to spot it on the chart
+	{
+		a = 0;
+		b = 0;
+	}
+	else
+	{
+		a = list.at(0).toDouble();
+		b = list.at(1).toDouble();
+	}
+	time = seriesA.at(index).x();
+	seriesA.replace(index, time, a);
+	seriesB.replace(index, time, b);
+}
+
+void MainWindow::clickedPoint(QPointF point)
+{
+	int index = point.x() / (1 / 29.97);
+	QTextCursor cursor(ui->plainTextEdit->document()->findBlockByLineNumber(index));
+	ui->plainTextEdit->setTextCursor(cursor);
+	ui->plainTextEdit->setFocus();
+	ui->statusBar->showMessage("Ready");
 }

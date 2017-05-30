@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui charts
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -14,9 +14,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    sxoqplaintext.cpp
+    sxoqplaintext.cpp \
+    chartdialog.cpp
 
 HEADERS  += mainwindow.h \
-    sxoqplaintext.h
+    sxoqplaintext.h \
+    chartdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    chartdialog.ui
